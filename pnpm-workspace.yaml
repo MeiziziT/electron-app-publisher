@@ -1,0 +1,6 @@
+allowBuilds:
+  '@bitdisaster/exe-icon-extractor': set this to true or false
+  electron: true
+  electron-winstaller: true
+
+nodeLinker: hoisted
