@@ -3,6 +3,8 @@ on:
     push:
         tags:
             - "v*"
+permissions:
+    contents: write          # ← 加这两行，授予写 Release 的权限
 jobs:
     release: 
         strategy:
