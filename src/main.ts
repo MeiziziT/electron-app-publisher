@@ -2,12 +2,12 @@ import { updateElectronApp } from "update-electron-app";
 import { app, BrowserWindow } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
-updateElectronApp();
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
   app.quit();
 }
-
+const isDev = !app.isPackaged;
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -26,9 +26,18 @@ const createWindow = () => {
       path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
     );
   }
-
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  if (isDev) {
+    // Open the DevTools.
+    mainWindow.webContents.openDevTools();
+  }
+  // 2. 菜单栏：生产模式去掉开发菜单
+  if (!isDev) {
+    // 可以自定义菜单，去掉 Reload / DevTools 等
+    mainWindow.removeMenu();
+  }
+  if (!isDev) {
+    updateElectronApp();
+  }
 };
 
 // This method will be called when Electron has finished
