@@ -52,7 +52,9 @@
   },
   "dependencies": {
     "@electron-forge/maker-wix": "^8.0.1",
+    "electron-log": "^5.4.4",
     "electron-squirrel-startup": "^1.0.1",
+    "electron-updater": "^6.8.9",
     "update-electron-app": "^3.3.0"
   }
 }
