@@ -1,0 +1,29 @@
+name: Release
+on:
+    push:
+        tags:
+            -"v*"
+jobs:
+    release: 
+        strategy:
+            matrix:
+                os: [macos-latest, ubuntu-latest, windows-latest]
+        runs-on: ${{ matrix.os }}
+
+        steps:
+            - uses: actions/checkout@v4
+              
+            - uses: pnpm/action-setup@v4        # ← 先装 pnpm
+              with:
+                version: 11
+            - uses: actions/setup-node@v4
+              with:
+                node-version: 22
+                cache: 'pnpm'                    # ← 缓存改成 pnpm
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile   # ← 改成 pnpm
+            
+            - name: Build and Publish
+              env: 
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: pnpm  run publish

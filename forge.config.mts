@@ -56,6 +56,36 @@ const config: ForgeConfig = {
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
     }),
   ],
+  publishers: [
+    {
+      name: "@electron-forge/publisher-github",
+      config: {
+        repository: {
+          owner: "MeiziziT",
+          name: "electron-app-publisher",
+        },
+        // ========== 常用可选 ==========
+        prerelease: false, // true = 标记为预发布版本
+        draft: false, // true = 创建为草稿（不公开）
+        force: false, // true = 覆盖已存在的 release tag
+
+        // 自定义 Release Tag 名称（默认用 package.json 的 version）
+        tagPrefix: "v", // 最终 tag 形如 v1.2.3
+
+        // 鉴权（一般用环境变量，不要硬编码）
+        authToken: process.env.GITHUB_TOKEN,
+
+        // 生成 Release 的描述
+        // 默认会用 CHANGELOG 或留空
+
+        // 上传文件的超时时间（毫秒），大文件调大
+        timeout: 60000,
+
+        // 指定使用哪个 API（GitHub Enterprise）
+        // apiBaseUrl: 'https://github.mycompany.com/api/v3',
+      },
+    },
+  ],
 };
 
 export default config;
