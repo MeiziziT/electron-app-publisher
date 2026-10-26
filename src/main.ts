@@ -141,17 +141,17 @@ const createWindow = () => {
     // 监听更新事件， 弹框提示用户
 
     // 检测到新版本，开始下载
-    autoUpdater.on(
-      "update-available",
-      ({ releaseNotes, releaseName, releaseDate }: UpdateInfo) => {
-        console.log(`发现新版本: ${releaseName}, 开始下载...`);
-      },
-    );
+    autoUpdater.on("update-available", (updateInfo: UpdateInfo) => {
+      const { releaseNotes, releaseName, releaseDate } = updateInfo;
+      log.info(JSON.stringify(updateInfo, null, 2));
+      log.info(`发现新版本: ${releaseName}, 开始下载...`);
+    });
 
     // 下载完成，提示用户重启
     autoUpdater.on(
       "update-downloaded",
-      ({ releaseName, releaseDate }: UpdateDownloadedEvent) => {
+      (updateDownloadEvent: UpdateDownloadedEvent) => {
+        const { releaseName, releaseDate } = updateDownloadEvent;
         dialog
           .showMessageBox(mainWindow, {
             type: "info",
@@ -171,10 +171,10 @@ const createWindow = () => {
     );
     // 没有新版本
     autoUpdater.on("update-not-available", () => {
-      console.log("当前已是最新版本");
+      log.info("当前已是最新版本");
     });
     autoUpdater.on("error", (err) => {
-      console.error("更新出错:", err);
+      log.error("更新出错:", err);
     });
   }
 
