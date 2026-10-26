@@ -9,8 +9,13 @@ import {
 import log from "electron-log";
 import path from "node:path";
 import started from "electron-squirrel-startup";
-import { autoUpdater, type AppUpdater } from "electron-updater";
-import { Menu } from "electron/main";
+import {
+  autoUpdater,
+  UpdateDownloadedEvent,
+  UpdateInfo,
+  type AppUpdater,
+} from "electron-updater";
+import { Menu, ipcMain } from "electron/main";
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
   app.quit();
@@ -23,9 +28,26 @@ autoUpdater.logger = log;
 log.info("App starting...");
 
 const isDev = !app.isPackaged;
-
-let template: Array<MenuItemConstructorOptions | MenuItem> = [];
 let mainWindow: BrowserWindow;
+let template: Array<MenuItemConstructorOptions | MenuItem> = [
+  {
+    label: "win32" + app.name,
+    submenu: [
+      {
+        click: () => {
+          mainWindow.webContents.send("update-counter", 1);
+        },
+        label: "Increment",
+      },
+      {
+        click: () => {
+          mainWindow.webContents.send("update-counter", -1);
+        },
+        label: "Decrement",
+      },
+    ],
+  },
+];
 
 function sendStatusToWindow(text: string) {
   log.info(text);
@@ -79,6 +101,7 @@ autoUpdater.on("download-progress", (progressObj) => {
 autoUpdater.on("update-downloaded", (info) => {
   sendStatusToWindow("Update downloaded");
 });
+console.log(path.join(__dirname, "preload.ts"));
 
 const createWindow = () => {
   // Create the browser window.
@@ -90,11 +113,6 @@ const createWindow = () => {
     },
   });
 
-  function sendStatusToWindow(text: string) {
-    log.info(text);
-    mainWindow.webContents.send("message", text);
-  }
-
   // and load the index.html of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
@@ -103,6 +121,7 @@ const createWindow = () => {
       path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
     );
   }
+  console.log(isDev);
   if (isDev) {
     // Open the DevTools.
     mainWindow.webContents.openDevTools();
@@ -124,12 +143,7 @@ const createWindow = () => {
     // 检测到新版本，开始下载
     autoUpdater.on(
       "update-available",
-      (
-        releaseNotes: string,
-        releaseName: string,
-        releaseDate: Date,
-        updateURL: string,
-      ) => {
+      ({ releaseNotes, releaseName, releaseDate }: UpdateInfo) => {
         console.log(`发现新版本: ${releaseName}, 开始下载...`);
       },
     );
@@ -137,19 +151,13 @@ const createWindow = () => {
     // 下载完成，提示用户重启
     autoUpdater.on(
       "update-downloaded",
-      (
-        event: Electron.Event,
-        releaseNotes: string,
-        releaseName: string,
-        releaseDate: Date,
-        updateURL: string,
-      ) => {
+      ({ releaseName, releaseDate }: UpdateDownloadedEvent) => {
         dialog
           .showMessageBox(mainWindow, {
             type: "info",
             title: "更新就绪",
             message: `新版本 ${releaseName} 已下载完成`,
-            detail: releaseNotes || "无更新说明",
+            detail: "无更新说明",
             buttons: ["稍后重启", "立即重启"],
             defaultId: 1,
             cancelId: 0,
@@ -169,6 +177,27 @@ const createWindow = () => {
       console.error("更新出错:", err);
     });
   }
+
+  ipcMain.handle("ping", () => {
+    return "12313";
+  });
+
+  ipcMain.handle("dialog:openFile", async (event) => {
+    const webContents = event.sender;
+    const win = BrowserWindow.fromWebContents(webContents)!;
+    const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+      title: "你好呀",
+    });
+    if (!canceled) {
+      return filePaths[0];
+    }
+  });
+
+  ipcMain.on("set-title", (event, title) => {
+    const webContents = event.sender;
+    const win = BrowserWindow.fromWebContents(webContents);
+    win?.setTitle(title);
+  });
 };
 
 // This method will be called when Electron has finished
