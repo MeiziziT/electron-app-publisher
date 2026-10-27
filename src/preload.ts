@@ -14,5 +14,7 @@ const electronApi: IElectronApi = {
   onUpdateCounter: (callback) =>
     ipcRenderer.on("update-counter", (_event, value) => callback(value)),
   counterValue: (value: number) => value,
+
+  appVersion: () => ipcRenderer.invoke("appVersion"),
 };
 contextBridge.exposeInMainWorld("electronApi", electronApi);

@@ -7,6 +7,7 @@ export interface IElectronApi {
 
   onUpdateCounter: (callback: (value: number) => void) => IpcRenderer;
   counterValue: (value: number) => void;
+  appVersion: () => Promise<string>;
 }
 
 declare global {

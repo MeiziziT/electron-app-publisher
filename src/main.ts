@@ -9,12 +9,6 @@ import {
 import log from "electron-log";
 import path from "node:path";
 import started from "electron-squirrel-startup";
-import {
-  autoUpdater,
-  UpdateDownloadedEvent,
-  UpdateInfo,
-  type AppUpdater,
-} from "electron-updater";
 import { Menu, ipcMain } from "electron/main";
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -23,8 +17,6 @@ if (started) {
 // Initialize the logger to be available in renderer process
 log.initialize();
 log.info("Log from the main process");
-
-autoUpdater.logger = log;
 log.info("App starting...");
 
 const isDev = !app.isPackaged;
@@ -49,11 +41,6 @@ let template: Array<MenuItemConstructorOptions | MenuItem> = [
   },
 ];
 
-function sendStatusToWindow(text: string) {
-  log.info(text);
-  mainWindow.webContents.send("message", text);
-}
-
 if (process.platform === "darwin") {
   // OS X
   const name = app.getName();
@@ -74,33 +61,6 @@ if (process.platform === "darwin") {
     ],
   });
 }
-autoUpdater.on("checking-for-update", () => {
-  sendStatusToWindow("Checking for update...");
-});
-autoUpdater.on("update-available", (info) => {
-  sendStatusToWindow("Update available.");
-});
-autoUpdater.on("update-not-available", (info) => {
-  sendStatusToWindow("Update not available.");
-});
-autoUpdater.on("error", (err) => {
-  sendStatusToWindow("Error in auto-updater. " + err);
-});
-autoUpdater.on("download-progress", (progressObj) => {
-  let log_message = "Download speed: " + progressObj.bytesPerSecond;
-  log_message = log_message + " - Downloaded " + progressObj.percent + "%";
-  log_message =
-    log_message +
-    " (" +
-    progressObj.transferred +
-    "/" +
-    progressObj.total +
-    ")";
-  sendStatusToWindow(log_message);
-});
-autoUpdater.on("update-downloaded", (info) => {
-  sendStatusToWindow("Update downloaded");
-});
 console.log(path.join(__dirname, "preload.ts"));
 
 const createWindow = () => {
@@ -132,54 +92,19 @@ const createWindow = () => {
     mainWindow.removeMenu();
   }
   if (!isDev) {
-    // 自动更新 + 提示
+    // 自动更新：Electron Forge 官方方案，基于 update.electronjs.org
+    // 读取 package.json 的 repository 字段确定仓库，无需 app-update.yml
     updateElectronApp({
-      logger: console,
+      logger: log,
       updateInterval: "10 minutes",
-    });
-
-    // 监听更新事件， 弹框提示用户
-
-    // 检测到新版本，开始下载
-    autoUpdater.on("update-available", (updateInfo: UpdateInfo) => {
-      const { releaseNotes, releaseName, releaseDate } = updateInfo;
-      log.info(JSON.stringify(updateInfo, null, 2));
-      log.info(`发现新版本: ${releaseName}, 开始下载...`);
-    });
-
-    // 下载完成，提示用户重启
-    autoUpdater.on(
-      "update-downloaded",
-      (updateDownloadEvent: UpdateDownloadedEvent) => {
-        const { releaseName, releaseDate } = updateDownloadEvent;
-        dialog
-          .showMessageBox(mainWindow, {
-            type: "info",
-            title: "更新就绪",
-            message: `新版本 ${releaseName} 已下载完成`,
-            detail: "无更新说明",
-            buttons: ["稍后重启", "立即重启"],
-            defaultId: 1,
-            cancelId: 0,
-          })
-          .then(({ response }) => {
-            if (response === 1) {
-              autoUpdater.quitAndInstall(false, true);
-            }
-          });
-      },
-    );
-    // 没有新版本
-    autoUpdater.on("update-not-available", () => {
-      log.info("当前已是最新版本");
-    });
-    autoUpdater.on("error", (err) => {
-      log.error("更新出错:", err);
     });
   }
 
   ipcMain.handle("ping", () => {
     return "12313";
+  });
+  ipcMain.handle("appVersion", () => {
+    return app.getVersion();
   });
 
   ipcMain.handle("dialog:openFile", async (event) => {
@@ -228,7 +153,3 @@ app.on("window-all-closed", () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
-
-app.whenReady().then(() => {
-  autoUpdater.checkForUpdatesAndNotify();
-});
