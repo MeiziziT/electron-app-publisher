@@ -3,28 +3,48 @@ on:
     push:
         tags:
             - "v*"
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: "要发布的标签，例如 v1.9.5"
+                required: true
+                type: string
 permissions:
-    contents: write          # ← 加这两行，授予写 Release 的权限
+    contents: write
 jobs:
-    release: 
+    release:
         strategy:
-            fail-fast: false          # ← 加这一行，一个失败不影响其他
+            fail-fast: false
             matrix:
                 os: [macos-latest, ubuntu-latest, windows-latest]
         runs-on: ${{ matrix.os }}
 
         steps:
             - uses: actions/checkout@v4
-              
-            - uses: pnpm/action-setup@v4        # ← 先装 pnpm
+              with:
+                  ref: ${{ inputs.tag || github.ref }}
+
+            - uses: pnpm/action-setup@v4
             - uses: actions/setup-node@v4
               with:
-                node-version: 22
-                cache: 'pnpm'                    # ← 缓存改成 pnpm
+                  node-version: 22
+                  cache: 'pnpm'
+
+            - name: Verify release tag
+              shell: bash
+              env:
+                  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+              run: |
+                  PACKAGE_TAG="v$(node -p "require('./package.json').version")"
+                  if [ "$RELEASE_TAG" != "$PACKAGE_TAG" ]; then
+                    echo "Tag $RELEASE_TAG does not match package version $PACKAGE_TAG"
+                    exit 1
+                  fi
+
             - name: Install dependencies
-              run: pnpm install --frozen-lockfile   # ← 改成 pnpm
-            
+              run: pnpm install --frozen-lockfile
+
             - name: Build and Publish
-              env: 
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              run: pnpm  run publish
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: pnpm run publish
