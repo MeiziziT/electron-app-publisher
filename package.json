@@ -1,7 +1,7 @@
 {
   "name": "my-app",
   "productName": "my-app",
-  "version": "1.9.3",
+  "version": "1.9.4",
   "private": true,
   "description": "My Electron application description",
   "repository": {
