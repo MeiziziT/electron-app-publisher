@@ -22,7 +22,7 @@ const appVersion = document.querySelector("#appVersion")!;
 const func = async () => {
   const response = await window.electronApi.ping();
   const version = await window.electronApi.appVersion();
-  appVersion?.innerHTML = version;
+  appVersion.innerHTML = version;
   console.log(response); // 打印 'pong'
 };
 
