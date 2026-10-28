@@ -12,43 +12,53 @@
  * https://electronjs.org/docs/tutorial/security
  */
 
+import * as React from "react";
+import * as ReactDOM from "react-dom";
 import "./index.css";
+import "./root";
+// console.log(
+//   "👋 This message is being logged by the renderer process, included via Vite",
+// );
 
-console.log(
-  "👋 This message is being logged by the renderer process, included via Vite",
-);
+// const appVersion = document.querySelector("#appVersion")!;
+// const func = async () => {
+//   const response = await window.electronApi.ping();
+//   const version = await window.electronApi.appVersion();
+//   appVersion.innerHTML = version;
+//   console.log(response); // 打印 'pong'
+// };
 
-const appVersion = document.querySelector("#appVersion")!;
-const func = async () => {
-  const response = await window.electronApi.ping();
-  const version = await window.electronApi.appVersion();
-  appVersion.innerHTML = version;
-  console.log(response); // 打印 'pong'
-};
+// func();
 
-func();
+// const setButton = document.getElementById("btn");
+// const titleInput = document.getElementById("title") as HTMLInputElement;
+// setButton?.addEventListener("click", () => {
+//   const title = titleInput?.value;
+//   window.electronApi.setTitle(title);
+// });
 
-const setButton = document.getElementById("btn");
-const titleInput = document.getElementById("title") as HTMLInputElement;
-setButton?.addEventListener("click", () => {
-  const title = titleInput?.value;
-  window.electronApi.setTitle(title);
-});
+// const btn = document.getElementById("btn2")!;
+// const filePathElement = document.getElementById("filePath")!;
 
-const btn = document.getElementById("btn2")!;
-const filePathElement = document.getElementById("filePath")!;
+// btn.addEventListener("click", async () => {
+//   const filePath = await window.electronApi.openFile();
+//   filePathElement.innerText = filePath;
+// });
 
-btn.addEventListener("click", async () => {
-  const filePath = await window.electronApi.openFile();
-  filePathElement.innerText = filePath;
-});
+// const counter = document.getElementById("counter")!;
+// const ipcRenderer = window.electronApi.onUpdateCounter((value) => {
+//   const oldValue = Number(counter.innerText);
+//   const newValue = oldValue + value;
+//   counter.innerText = newValue.toString();
+//   window.electronApi.counterValue(newValue);
+// });
 
-const counter = document.getElementById("counter")!;
-const ipcRenderer = window.electronApi.onUpdateCounter((value) => {
-  const oldValue = Number(counter.innerText);
-  const newValue = oldValue + value;
-  counter.innerText = newValue.toString();
-  window.electronApi.counterValue(newValue);
-});
+// ipcRenderer.invoke("ping");
+const internalsA = (React as any)
+  .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+const internalsB = (ReactDOM as any)
+  .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-ipcRenderer.invoke("ping");
+console.log("React version   :", React.version);
+console.log("ReactDOM version:", ReactDOM.version);
+console.log("Same React instance:", internalsA === internalsB);
